@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         changeNameEdt = findViewById(R.id.edt_name)
 
         changeNameBtn.setOnClickListener {
-            greetingTv.text = "Hello ${changeNameBtn.text} How are you today?"
+            greetingTv.text = "Hello ${changeNameBtn.text} How are you todaysss?"
         }
     }
 }
