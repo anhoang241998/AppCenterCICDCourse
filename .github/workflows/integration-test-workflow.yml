@@ -1,0 +1,44 @@
+name: UI Tests
+run-name: ${{ github.actor }} run UI test workflows
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  uiTest:
+    name: Run UI Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api-level: [ 25, 27, 29 ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Log Secrets API_KEY
+        run: echo '${{ secrets.API_KEY }}'
+      - name: Add Secrets
+        run: |
+          cat > local.properties << ENDOFFILE
+            API_KEY=${{ secrets.API_KEY }}
+            ENDOFFILE
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+              sudo udevadm control --reload-rules
+              sudo udevadm trigger --name-match=kvm
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86
+          disable-animations: true
+          script: ./gradlew :app:connectedCheck
