@@ -1,0 +1,84 @@
+name: UI Tests
+run-name: ${{ github.actor }} run UI test workflows
+
+#            cores: 4
+#            heap-size: 4096M
+#            disk-size: 4096M
+#            ram-size: 8192M
+#            sdcard-path-or-size: 3G
+#            avd-name: buildjet-avd-x86-64-google-${{ matrix.api-level }}
+
+env:
+  UI_TEST_COMMAND: :app:connectedCheck
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  uiTest:
+    name: Run UI Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api-level: [ 25, 27, 29 ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+          cache-read-only: false
+      - name: Log Secrets API_KEY
+        run: echo '${{ secrets.API_KEY }}'
+      - name: Add Secrets
+        run: |
+          cat > local.properties << ENDOFFILE
+            API_KEY=${{ secrets.API_KEY }}
+            ENDOFFILE
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+              sudo udevadm control --reload-rules
+              sudo udevadm trigger --name-match=kvm
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
+      - name: create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86
+          profile: Nexus 6
+          disable-animations: true
+          force-avd-creation: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run instrumented tests
+        uses: Wandalen/wretry.action@master
+        with:
+          action: reactivecircus/android-emulator-runner@v2
+          with: |
+            api-level: ${{ matrix.api-level }}
+            arch: x86
+            profile: Nexus 6
+            disable-animations: true
+            force-avd-creation: false
+            script: ./gradlew ${{ env.UI_TEST_COMMAND }}
+          attempt_limit: 2
+          attempt_delay: 5000
