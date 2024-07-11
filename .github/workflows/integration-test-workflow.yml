@@ -71,7 +71,6 @@ jobs:
             arch: x86
             disable-animations: true
             force-avd-creation: false
-            script: ./gradlew "${{ env.UI_TEST_COMMAND }} "
-              --stacktrace
+            script: ./gradlew ${{ env.UI_TEST_COMMAND }}
           attempt_limit: 2
           attempt_delay: 5000
