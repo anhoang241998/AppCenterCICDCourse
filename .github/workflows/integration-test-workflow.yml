@@ -69,8 +69,16 @@ jobs:
           with: |
             api-level: ${{ matrix.api-level }}
             arch: x86
+            profile: Nexus 6
+            cores: 4
+            heap-size: 4096M
+            disk-size: 4096M
+            ram-size: 8192M
+            sdcard-path-or-size: 3G
+            avd-name: buildjet-avd-x86-64-google-${{ matrix.api-level }}
             disable-animations: true
             force-avd-creation: false
+            emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
             script: ./gradlew ${{ env.UI_TEST_COMMAND }}
           attempt_limit: 2
           attempt_delay: 5000
