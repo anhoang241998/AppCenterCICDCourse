@@ -65,7 +65,7 @@ jobs:
       - name: Run instrumented tests
         uses: Wandalen/wretry.action@master
         with:
-          actions: reactivecircus/android-emulator-runner@v2
+          action: reactivecircus/android-emulator-runner@v2
           with: |
             api-level: ${{ matrix.api-level }}
             arch: x86
