@@ -2,7 +2,7 @@ name: UI Tests
 run-name: ${{ github.actor }} run UI test workflows
 
 env:
-  UI_TEST_COMMAND: app:connectedCheck
+  UI_TEST_COMMAND: :app:connectedCheck
 
 on:
   pull_request:
